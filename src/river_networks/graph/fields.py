@@ -1,0 +1,36 @@
+HYDRORIVERS_SOURCE_FIELDS={
+    "HYRIV_ID":"HYRIV_ID",
+    "NEXT_DOWN":"NEXT_DOWN",
+    "MAIN_RIV":"MAIN_RIV",
+    "HYBAS_ID":"HYBAS_L12",
+    "LENGTH_KM":"LENGTH_KM",
+    "DIST_DN_KM":"DIST_DN_KM",
+    "DIST_UP_KM":"DIST_UP_KM",
+    "CATCH_SKM":"CATCH_SKM",
+    "UPLAND_SKM":"UPLAND_SKM",
+    "DIS_AV_CMS":"DIS_AV_CMS",
+    "ENDORHEIC":"ENDORHEIC",
+    "ORD_STRA":"ORD_STRA",
+    "ORD_CLAS":"ORD_CLAS",
+    "ORD_FLOW":"ORD_FLOW",
+}
+
+HYDRORIVERS_FIELDS=(*HYDRORIVERS_SOURCE_FIELDS,"geometry")
+
+HYDRORIVERS_FIELD_TYPES={
+    "HYRIV_ID":"int",
+    "NEXT_DOWN":"int",
+    "MAIN_RIV":"int",
+    "HYBAS_ID":"int",
+    "LENGTH_KM":"float",
+    "DIST_DN_KM":"float",
+    "DIST_UP_KM":"float",
+    "CATCH_SKM":"float",
+    "UPLAND_SKM":"float",
+    "DIS_AV_CMS":"float",
+    "ENDORHEIC":"int",
+    "ORD_STRA":"int",
+    "ORD_CLAS":"int",
+    "ORD_FLOW":"int",
+    "geometry":"geometry",
+}

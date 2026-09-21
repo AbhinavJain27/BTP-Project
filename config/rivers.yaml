@@ -1,0 +1,49 @@
+rivers:
+  ganges:
+    river_id: ganges
+    display_name: Ganges
+    region: india
+    source: {dataset: HydroRIVERS, provider: HydroSHEDS, version: v1.0, regional_source: asia, format: filegdb}
+    selection: {method: main_riv, main_riv_ids: [41067217], hyriv_ids: [], hybas_ids: []}
+    artifact_id: ganges
+    output_location: india/ganges
+  godavari:
+    river_id: godavari
+    display_name: Godavari
+    region: india
+    source: {dataset: HydroRIVERS, provider: HydroSHEDS, version: v1.0, regional_source: asia, format: filegdb}
+    selection: {method: main_riv, main_riv_ids: [41275841], hyriv_ids: [], hybas_ids: []}
+    artifact_id: godavari
+    output_location: india/godavari
+  krishna:
+    river_id: krishna
+    display_name: Krishna
+    region: india
+    source: {dataset: HydroRIVERS, provider: HydroSHEDS, version: v1.0, regional_source: asia, format: filegdb}
+    selection: {method: main_riv, main_riv_ids: [41297283], hyriv_ids: [], hybas_ids: []}
+    artifact_id: krishna
+    output_location: india/krishna
+  nile:
+    river_id: nile
+    display_name: Nile
+    region: global
+    source: {dataset: HydroRIVERS, provider: HydroSHEDS, version: v1.0, regional_source: africa, format: filegdb}
+    selection: {method: main_riv, main_riv_ids: [10047863], hyriv_ids: [], hybas_ids: []}
+    artifact_id: nile
+    output_location: global/nile
+  amazon:
+    river_id: amazon
+    display_name: Amazon
+    region: global
+    source: {dataset: HydroRIVERS, provider: HydroSHEDS, version: v1.0, regional_source: south_america, format: filegdb}
+    selection: {method: main_riv, main_riv_ids: [60443230], hyriv_ids: [], hybas_ids: []}
+    artifact_id: amazon
+    output_location: global/amazon
+  yangtze:
+    river_id: yangtze
+    display_name: Yangtze
+    region: global
+    source: {dataset: HydroRIVERS, provider: HydroSHEDS, version: v1.0, regional_source: asia, format: filegdb}
+    selection: {method: main_riv, main_riv_ids: [40613666], hyriv_ids: [], hybas_ids: []}
+    artifact_id: yangtze
+    output_location: global/yangtze

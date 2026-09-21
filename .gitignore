@@ -1,0 +1,38 @@
+# Datasets (large geospatial files: GeoParquet, GraphML, GDB)
+datasets/
+deploy_bundle/
+deploy_bundle.zip
+.data_bundle.zip
+
+# Python virtual environment & runtime packages
+venv/
+.venv/
+env/
+ENV/
+.runtime-packages/
+
+# Bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build & packaging
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.bak
+*.swp
+*~
+
+# Streamlit secrets
+.streamlit/secrets.toml

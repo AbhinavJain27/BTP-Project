@@ -1,0 +1,2 @@
+dataset,provider,version,configured,acquisition_status,preprocessing_status,extraction_status,graph_status,notes
+HydroRIVERS,HydroSHEDS,v1.0,yes,ready_for_local_source,implemented,implemented,implemented,Raw source is external and must be supplied locally; river selection IDs are configured per river in config/rivers.yaml

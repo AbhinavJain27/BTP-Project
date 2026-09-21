@@ -1,0 +1,15 @@
+[server]
+# The bundle is unpacked into datasets/ at runtime. Without this, Streamlit's file
+# watcher tries to watch every extracted file and burns memory doing it.
+folderWatchBlacklist = ["datasets", ".runtime-packages"]
+maxUploadSize = 5
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#4a6fa5"
+backgroundColor = "#f6f7f9"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#1a2942"

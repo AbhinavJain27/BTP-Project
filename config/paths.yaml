@@ -1,0 +1,46 @@
+paths:
+  datasets_root: datasets
+  global_root: datasets/global
+  india_root: datasets/india
+  processed_root: processed
+  graph_root: graphs
+  analysis_root: analysis
+  export_root: exports
+  metadata_root: metadata
+  regional_sources:
+    asia:
+      storage_root: datasets/india
+      raw_root: datasets/india/raw
+      processed_root: datasets/india/processed
+      directory: HydroRIVERS_v10_as.gdb
+      processed_file: HydroRIVERS_v10_as.parquet
+      layer: HydroRIVERS_v10_as
+      format: filegdb
+      download_url: https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_as.gdb.zip
+    south_america:
+      storage_root: datasets/global
+      raw_root: datasets/global/raw
+      processed_root: datasets/global/processed
+      directory: HydroRIVERS_v10_sa.gdb
+      processed_file: HydroRIVERS_v10_sa.parquet
+      layer: HydroRIVERS_v10_sa
+      format: filegdb
+      download_url: https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_sa.gdb.zip
+    north_central_america:
+      storage_root: datasets/global
+      raw_root: datasets/global/raw
+      processed_root: datasets/global/processed
+      directory: HydroRIVERS_v10_na.gdb
+      processed_file: HydroRIVERS_v10_na.parquet
+      layer: HydroRIVERS_v10_na
+      format: filegdb
+      download_url: https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_na.gdb.zip
+    africa:
+      storage_root: datasets/global
+      raw_root: datasets/global/raw
+      processed_root: datasets/global/processed
+      directory: HydroRIVERS_v10_af.gdb
+      processed_file: HydroRIVERS_v10_af.parquet
+      layer: HydroRIVERS_v10_af
+      format: filegdb
+      download_url: https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_af.gdb.zip
