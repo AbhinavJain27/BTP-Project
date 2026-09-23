@@ -2,6 +2,8 @@
 
 A configuration-driven pipeline and interactive Streamlit dashboard for extracting, analyzing, and exploring large-scale river drainage networks from HydroSHEDS HydroRIVERS v1.0 data.
 
+🌐 **Live Dashboard & Computed Data**: Access the interactive dashboard and explore all computed datasets online at **[https://river-networks.streamlit.app/](https://river-networks.streamlit.app/)**.
+
 ---
 
 ## Key Features
@@ -24,6 +26,7 @@ A configuration-driven pipeline and interactive Streamlit dashboard for extracti
   - **Distributions**: Reach attribute distributions (length, discharge, catchment area, Strahler order, Horton's law) and network metric histograms.
   - **Reach Map**: Multi-order toggleable highlighting in bold, high-contrast colors against dull gray background reaches, with cleared initial state on country boundaries.
   - **Node Explorer**: Topological point explorer (headwaters in vivid sky blue, confluences in orange, outlets in crimson red, intermediates in purple) with balanced quota sampling and legend preservation.
+  - **Data Viewer & Download**: Human-friendly dataset inspection and custom column export (processed basin networks in `.csv` for Excel, and regional hydrography in `.parquet`/`.csv`).
   - **Provenance / Logs**: Pipeline execution status and metadata audit trail.
 - **Zero-RAM Deployment Architecture**:
   - Built-in bundler (`scripts/build_deploy_bundle.py`) that converts 1.65 GB of raw GraphML into columnar `nodes.parquet`, shrinking the entire 6-river dataset to **~35 MB zipped** for instant, low-memory deployment on Streamlit Community Cloud.
@@ -43,6 +46,10 @@ pip install -e .
 ```
 
 ### 2. Launch the Dashboard
+
+**Live App**: You can explore the live dashboard directly without local installation at **[https://river-networks.streamlit.app/](https://river-networks.streamlit.app/)** to view maps, metrics, and download all computed datasets.
+
+To run locally:
 
 ```bash
 streamlit run dashboard/app.py
