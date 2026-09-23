@@ -11,7 +11,7 @@ The pipeline currently supports six global and Indian river basins:
 | River | Region | Source Dataset | Selection Identifier (`MAIN_RIV`) | Reaches Extracted |
 |---|---|---|---|---|
 | **Amazon** | South America (`sa`) | HydroRIVERS v1.0 | `60443230` | 744,786 |
-| **Ganges-Brahmaputra-Meghna** | Asia (`as`) | HydroRIVERS v1.0 | `41067217` | 163,484 |
+| **Ganga-Brahmaputra-Meghna** | Asia (`as`) | HydroRIVERS v1.0 | `41067217` | 163,484 |
 | **Yangtze** | Asia (`as`) | HydroRIVERS v1.0 | `40613666` | 140,974 |
 | **Nile** | Africa (`af`) | HydroRIVERS v1.0 | `10047863` | 133,798 |
 | **Godavari** | India (Asia `as`) | HydroRIVERS v1.0 | `41275841` | 18,703 |

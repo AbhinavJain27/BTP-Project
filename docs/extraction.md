@@ -14,7 +14,7 @@ In HydroRIVERS, reach records do not contain string river names. Instead, river 
 
 ### Configured Rivers (`config/rivers.yaml`)
 - **Amazon**: `MAIN_RIV = 60443230` (South America)
-- **Ganges**: `MAIN_RIV = 41067217` (Asia) — encompasses the full Ganges-Brahmaputra-Meghna (GBM) delta system.
+- **Ganga**: `MAIN_RIV = 41067217` (Asia) — encompasses the full Ganga-Brahmaputra-Meghna (GBM) delta system.
 - **Godavari**: `MAIN_RIV = 41275841` (Asia)
 - **Krishna**: `MAIN_RIV = 41297283` (Asia)
 - **Nile**: `MAIN_RIV = 10047863` (Africa)

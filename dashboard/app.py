@@ -579,14 +579,22 @@ def geometry_map_highlight_orders(frame: gpd.GeoDataFrame, max_reaches: int, fie
     data = frame.copy()
     data["_order"] = pd.to_numeric(data[field], errors="coerce")
 
+    # Sort data deterministically so that any subsample takes the most significant reaches
+    # (by discharge, length, then ID) consistently across selections.
+    sort_cols = [c for c in ["DIS_AV_CMS", "LENGTH_KM", "HYRIV_ID"] if c in data.columns]
+
     matches = data[data["_order"].isin(selected_values)]
     other = data[~data["_order"].isin(selected_values)]
 
-    bg_budget = max(0, max_reaches - len(matches))
-    if len(other) > bg_budget:
-        other_sample = other.sample(bg_budget, random_state=42) if bg_budget > 0 else other.iloc[0:0]
+    # Background reaches: keep a subtle context layer without overcrowding
+    bg_budget = min(1500, max(500, max_reaches // 4))
+    if not other.empty:
+        if sort_cols:
+            other_sample = other.sort_values(sort_cols, ascending=False).head(bg_budget)
+        else:
+            other_sample = other.head(bg_budget)
     else:
-        other_sample = other
+        other_sample = other.iloc[0:0]
 
     total_context = 0
     lons_other, lats_other = [], []
@@ -610,12 +618,45 @@ def geometry_map_highlight_orders(frame: gpd.GeoDataFrame, max_reaches: int, fie
             opacity=1.0,
         ))
 
-    total_highlight = 0
-    if len(matches) > max_reaches:
-        matches = matches.sample(max_reaches, random_state=42)
+    # Fair quota allocation across selected orders (water-filling)
+    # This guarantees that rare/major orders (like Strahler 9 or Class 1) are NEVER drowned out
+    # by massive lower-order sets (like Strahler 1), and that reach subsets are deterministic prefixes.
+    sorted_orders = sorted(selected_values)
+    order_groups = {}
+    for val in sorted_orders:
+        grp = matches[matches["_order"] == val]
+        if not grp.empty:
+            if sort_cols:
+                grp = grp.sort_values(sort_cols, ascending=False)
+            order_groups[val] = grp
 
-    for i, val in enumerate(sorted(selected_values)):
-        band = matches[matches["_order"] == val]
+    counts = {v: len(grp) for v, grp in order_groups.items()}
+    rem_budget = max_reaches
+    active_orders = list(order_groups.keys())
+    quotas = {v: 0 for v in active_orders}
+
+    while active_orders and rem_budget > 0:
+        fair_share = max(1, rem_budget // len(active_orders))
+        finished = []
+        for v in active_orders:
+            needed = counts[v] - quotas[v]
+            if needed <= fair_share:
+                quotas[v] += needed
+                rem_budget -= needed
+                finished.append(v)
+            else:
+                quotas[v] += fair_share
+                rem_budget -= fair_share
+        if not finished or rem_budget <= 0:
+            break
+        for v in finished:
+            active_orders.remove(v)
+
+    total_highlight = 0
+    for i, val in enumerate(sorted_orders):
+        if val not in order_groups:
+            continue
+        band = order_groups[val].iloc[:quotas[val]]
         if band.empty:
             continue
         lons, lats = [], []

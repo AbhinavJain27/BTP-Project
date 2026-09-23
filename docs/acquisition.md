@@ -10,7 +10,7 @@ The pipeline maps each configured river to its continental regional source via [
 
 | Continent / Region | File Geodatabase | Layer Name | Rivers |
 |---|---|---|---|
-| **Asia** | `HydroRIVERS_v10_as.gdb` | `HydroRIVERS_v10_as` | Ganges, Godavari, Krishna, Yangtze |
+| **Asia** | `HydroRIVERS_v10_as.gdb` | `HydroRIVERS_v10_as` | Ganga, Godavari, Krishna, Yangtze |
 | **South America** | `HydroRIVERS_v10_sa.gdb` | `HydroRIVERS_v10_sa` | Amazon |
 | **Africa** | `HydroRIVERS_v10_af.gdb` | `HydroRIVERS_v10_af` | Nile |
 

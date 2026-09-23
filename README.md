@@ -8,7 +8,7 @@ A configuration-driven pipeline and interactive Streamlit dashboard for extracti
 
 - **Six Global River Basins Fully Processed**:
   - **Amazon** (South America): 744,786 reaches, 2,345-hop directed diameter.
-  - **Ganges-Brahmaputra-Meghna** (Asia): 163,484 reaches, 1,415-hop directed diameter.
+  - **Ganga-Brahmaputra-Meghna** (Asia): 163,484 reaches, 1,415-hop directed diameter.
   - **Yangtze** (Asia): 140,974 reaches, 1,738-hop directed diameter.
   - **Nile** (Africa): 133,798 reaches, 1,940-hop directed diameter.
   - **Godavari** (India): 18,703 reaches, 449-hop directed diameter.

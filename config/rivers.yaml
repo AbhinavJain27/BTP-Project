@@ -1,12 +1,12 @@
 rivers:
-  ganges:
-    river_id: ganges
-    display_name: Ganges
+  ganga:
+    river_id: ganga
+    display_name: Ganga
     region: india
     source: {dataset: HydroRIVERS, provider: HydroSHEDS, version: v1.0, regional_source: asia, format: filegdb}
     selection: {method: main_riv, main_riv_ids: [41067217], hyriv_ids: [], hybas_ids: []}
-    artifact_id: ganges
-    output_location: india/ganges
+    artifact_id: ganga
+    output_location: india/ganga
   godavari:
     river_id: godavari
     display_name: Godavari

@@ -146,7 +146,7 @@ Open **Manage app** (bottom right) for live logs. Check each river renders, the 
 
 **"🤯 This app has gone over its resource limits"** — RAM, essentially always. Rebuild the bundle with `--simplify`, lower the map's default reach cap in `app.py`, or reduce `max_entries` to 1.
 
-**App boots but every river says "not extracted yet"** — the bundle's internal layout is wrong. Unzipped into `datasets/`, it must produce `datasets/india/ganges/processed/extracted_network.parquet`. Check with `unzip -l deploy_bundle.zip | head`.
+**App boots but every river says "not extracted yet"** — the bundle's internal layout is wrong. Unzipped into `datasets/`, it must produce `datasets/india/ganga/processed/extracted_network.parquet`. Check with `unzip -l deploy_bundle.zip | head`.
 
 **Download fails on every boot** — the URL isn't publicly reachable. Test it with `curl -IL "<url>"` from a machine that isn't logged into GitHub.
 
