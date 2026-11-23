@@ -16,6 +16,8 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from river_networks.config import get_river, load_rivers, resolve_config
+from river_networks.rag import answer_river_query
+from river_networks.rag.agent import OUT_OF_SCOPE
 from river_networks.visualization import (
     NODE_TYPE_LABELS,
     NODE_TYPE_ORDER,
@@ -210,7 +212,7 @@ for _rid in river_ids:
     availability[_rid] = river_paths(_rid)["extracted"].is_file()
 
 with st.sidebar:
-    st.markdown("### River Networks (Phase 2)")
+    st.markdown("### River Networks")
     options = []
     for _id in river_ids:
         label = rivers[_id]["display_name"]
@@ -266,7 +268,7 @@ max_order = pd.to_numeric(frame["ORD_STRA"], errors="coerce").max()
 endorheic = pd.to_numeric(frame["ENDORHEIC"], errors="coerce").eq(1).sum()
 endorheic_pct = (endorheic / reaches * 100) if reaches else 0
 
-tab_overview, tab_dist, tab_map, tab_nodes, tab_viewer, tab_compare, tab_prov = st.tabs(
+tab_overview, tab_dist, tab_map, tab_nodes, tab_viewer, tab_compare, tab_rag, tab_prov = st.tabs(
     [
         "Overview",
         "Distributions",
@@ -274,6 +276,7 @@ tab_overview, tab_dist, tab_map, tab_nodes, tab_viewer, tab_compare, tab_prov = 
         "Node Explorer",
         "Data Viewer & Export",
         "Cross-Basin Comparison",
+        "RiverBot Q&A",
         "Logs",
     ]
 )
@@ -568,7 +571,67 @@ with tab_compare:
     else:
         st.info("Cross-basin comparisons require computed network metrics across rivers.")
 
-# ----------------- Tab 7: Logs -----------------
+# ----------------- Tab 7: RiverBot Q&A -----------------
+with tab_rag:
+    st.subheader("RiverBot Q&A")
+    st.caption("Ask for a definition, or name a basin to look up a saved metric.")
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    if st.button("Clear conversation", key="riverbot:clear"):
+        st.session_state.chat_history = []
+
+    basin_name = river["display_name"]
+    suggestions = ["What does directed diameter measure?", "What is the Horton bifurcation ratio?"]
+    has_directed_diameter = net_metrics and net_metrics.get("diameter", {}).get("directed") is not None
+    if has_directed_diameter:
+        suggestions.insert(0, f"What is the directed diameter of {basin_name}?")
+    suggestions.append(f"How many reaches are in {basin_name}?")
+    if node_counts:
+        suggestions.append("How many junctions are there in the network?")
+    if has_directed_diameter:
+        other_basin = next(
+            (rivers[rid]["display_name"] for rid in river_ids
+             if rid != river_id and river_paths(rid)["graph_metrics"].is_file()),
+            None,
+        )
+        if other_basin:
+            suggestions.append(f"Compare the directed diameters of {basin_name} and {other_basin}.")
+    if net_metrics and net_metrics.get("scaling", {}).get("horton", {}).get("bifurcation_ratio") is not None:
+        suggestions.append(f"What is the Horton bifurcation ratio for {basin_name}?")
+    clicked_question = None
+    for question in suggestions:
+        if st.button(question, key=f"riverbot:{question}"):
+            clicked_question = question
+
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "assistant" and msg["content"].strip().replace("’", "'") in {
+            "Gemini couldn't answer right now, and I couldn't find an explanation in the project docs.",
+            "That question is currently out of scope for RiverBot.",
+        }:
+            msg["content"] = OUT_OF_SCOPE
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    typed_question = st.chat_input("Ask about a river basin or metric")
+    user_query = clicked_question or typed_question
+    if user_query:
+        st.session_state.chat_history.append({"role": "user", "content": user_query})
+        with st.chat_message("user"):
+            st.markdown(user_query)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Answering your question..."):
+                response_text = answer_river_query(
+                    user_query,
+                    history=st.session_state.chat_history[:-1],
+                    selected_basin=river_id,
+                )
+                st.markdown(response_text)
+                st.session_state.chat_history.append({"role": "assistant", "content": response_text})
+
+# ----------------- Tab 8: Logs -----------------
 with tab_prov:
     st.markdown('<div class="rn-section-title">Logs & Provenance</div>', unsafe_allow_html=True)
     metadata_panel(paths, river, graph_metadata)

@@ -59,6 +59,7 @@ Computed by [`compute_network_metrics()`](../src/river_networks/graph/metrics.py
 
 - **Horton ratios** use log-linear fits by Strahler order. Consecutive reaches of the same order
   form a stream. Lengths are summed along those reaches, and drainage area is read at stream endpoints.
+- The **Horton bifurcation ratio** describes how quickly the number of streams decreases as Strahler order increases. A larger ratio means there are more lower-order streams per higher-order stream. River Networks estimates it by fitting the logarithm of stream count against stream order.
 - **Hack’s exponent** is a log-log fit of positive upstream distance and drainage area, using up to
   5,000 reproducibly sampled reaches. The saved metrics identify the length field and sample size.
 - **Tokunaga statistics** count lower-order tributaries entering higher-order streams, excluding the

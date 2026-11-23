@@ -21,6 +21,9 @@ dependencies=[
 "plotly>=5.20"
 ]
 
+[project.optional-dependencies]
+gemini = ["google-genai>=1.0,<2"]
+
 [project.scripts]
 river-networks="river_networks.cli:main"
 

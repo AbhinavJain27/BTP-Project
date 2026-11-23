@@ -4,6 +4,14 @@ deploy_bundle/
 deploy_bundle.zip
 .data_bundle.zip
 
+# Generated reports and research results
+/output/
+/tmp/pdfs/
+river_width_experiment/
+river_width_results.zip
+river_width_results_quick.zip
+.ipynb_checkpoints/
+
 # Python virtual environment & runtime packages
 venv/
 .venv/
