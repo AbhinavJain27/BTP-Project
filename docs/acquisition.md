@@ -6,7 +6,7 @@ HydroRIVERS v1.0 is produced by the [HydroSHEDS](https://www.hydrosheds.org/prod
 
 ## 1. Regional Sources & Mapping
 
-The pipeline maps each configured river to its continental regional source via [`config/paths.yaml`](file:///d:/BTP-abhinav/river-networks-phase1-complete/config/paths.yaml) and [`config/rivers.yaml`](file:///d:/BTP-abhinav/river-networks-phase1-complete/config/rivers.yaml):
+The pipeline maps each configured river to its continental regional source via [`config/paths.yaml`](../config/paths.yaml) and [`config/rivers.yaml`](../config/rivers.yaml):
 
 | Continent / Region | File Geodatabase | Layer Name | Rivers |
 |---|---|---|---|

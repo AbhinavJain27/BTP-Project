@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import logging
 from typing import Any
 import numpy as np
-
-logger = logging.getLogger(__name__)
 
 def _compute_histogram(data: np.ndarray, num_bins: int = 30, log_scale: bool = False) -> dict[str, list[float]]:
     data = data[np.isfinite(data)]
@@ -99,32 +96,40 @@ def compute_network_metrics(graph, reaches=None, sample_limit: int = 200000) -> 
     g_undir = graph.as_undirected(combine_edges="first")
     undirected_diameter = _2sweep_undirected_diameter(g_undir)
 
-    if vcount <= sample_limit:
-        try:
-            directed_avg_path = float(graph.average_path_length(directed=True))
-        except Exception:
+    if is_dag:
+        from ..analysis.tree_algorithms import compute_exact_directed_avg_path, compute_landmark_undirected_path
+        directed_avg_path = compute_exact_directed_avg_path(graph)
+        undir_info = compute_landmark_undirected_path(g_undir, num_landmarks=50)
+        undirected_avg_path = undir_info["mean"]
+        undirected_path_meta = undir_info
+    else:
+        if vcount <= sample_limit:
+            try:
+                directed_avg_path = float(graph.average_path_length(directed=True))
+            except Exception:
+                directed_avg_path = float(np.mean(hops_outlet[hops_outlet > 0])) if np.any(hops_outlet > 0) else 0.0
+        else:
             directed_avg_path = float(np.mean(hops_outlet[hops_outlet > 0])) if np.any(hops_outlet > 0) else 0.0
-    else:
-        directed_avg_path = float(np.mean(hops_outlet[hops_outlet > 0])) if np.any(hops_outlet > 0) else 0.0
 
-    if vcount <= 5000:
-        try:
-            undirected_avg_path = float(g_undir.average_path_length(directed=False))
-        except Exception:
-            undirected_avg_path = float(directed_avg_path * 1.5)
-    else:
-        sample_size = min(50, vcount)
-        rng = np.random.default_rng(42)
-        sample_nodes = rng.choice(vcount, size=sample_size, replace=False).tolist()
-        total_d = 0.0
-        total_cnt = 0
-        for s in sample_nodes:
-            row = g_undir.distances(source=int(s))[0]
-            finite = [d for d in row if 0 < d < float("inf")]
-            if finite:
-                total_d += sum(finite)
-                total_cnt += len(finite)
-        undirected_avg_path = float(total_d / total_cnt) if total_cnt > 0 else float(directed_avg_path)
+        if vcount <= 5000:
+            try:
+                undirected_avg_path = float(g_undir.average_path_length(directed=False))
+            except Exception:
+                undirected_avg_path = float(directed_avg_path * 1.5)
+        else:
+            sample_size = min(50, vcount)
+            rng = np.random.default_rng(42)
+            sample_nodes = rng.choice(vcount, size=sample_size, replace=False).tolist()
+            total_d = 0.0
+            total_cnt = 0
+            for s in sample_nodes:
+                row = g_undir.distances(source=int(s))[0]
+                finite = [d for d in row if 0 < d < float("inf")]
+                if finite:
+                    total_d += sum(finite)
+                    total_cnt += len(finite)
+            undirected_avg_path = float(total_d / total_cnt) if total_cnt > 0 else float(directed_avg_path)
+        undirected_path_meta = {"exact": False, "mean": undirected_avg_path}
 
     node_ids = graph.vs["node_id"] if "node_id" in graph.vs.attributes() else [str(i) for i in range(vcount)]
 
@@ -151,14 +156,24 @@ def compute_network_metrics(graph, reaches=None, sample_limit: int = 200000) -> 
         "histogram": _compute_histogram(pr_arr, num_bins=30, log_scale=True),
     }
 
-    if vcount <= sample_limit:
+    if is_dag:
+        from ..analysis.tree_algorithms import compute_exact_tree_betweenness
+        bw_arr = compute_exact_tree_betweenness(graph)
+        bw_method = "exact_tree_dp"
+        bw_exact = True
+    elif vcount <= sample_limit:
         try:
             bw_arr = np.array(graph.betweenness(directed=True), dtype=float)
+            bw_method = "igraph_exact"
+            bw_exact = True
         except Exception:
             bw_arr = np.zeros(vcount, dtype=float)
+            bw_method = "zeros"
+            bw_exact = False
     else:
-
         bw_arr = (vcount - hops_outlet) * hops_outlet
+        bw_method = "heuristic_proxy"
+        bw_exact = False
 
     max_bw_idx = int(np.argmax(bw_arr))
     betweenness_centrality = {
@@ -168,9 +183,20 @@ def compute_network_metrics(graph, reaches=None, sample_limit: int = 200000) -> 
         "median": float(np.median(bw_arr)),
         "max_node": node_ids[max_bw_idx],
         "histogram": _compute_histogram(bw_arr, num_bins=30, log_scale=True),
+        "method": bw_method,
+        "exact": bw_exact,
     }
 
     hops_hist = _compute_histogram(hops_outlet, num_bins=35, log_scale=False)
+
+    scaling_metrics = {}
+    perturbation_metrics = {}
+    if reaches is not None and hasattr(reaches, "columns"):
+        from ..analysis.scaling import compute_all_scaling_metrics
+        from ..analysis.fragmentation import simulate_perturbation_curves
+        scaling_metrics = compute_all_scaling_metrics(reaches)
+        if "LENGTH_KM" in reaches.columns:
+            perturbation_metrics = simulate_perturbation_curves(graph, reaches)
 
     return {
         "node_count": vcount,
@@ -217,6 +243,7 @@ def compute_network_metrics(graph, reaches=None, sample_limit: int = 200000) -> 
         "average_path_length": {
             "directed": directed_avg_path,
             "undirected": undirected_avg_path,
+            "undirected_meta": undirected_path_meta,
         },
         "shortest_paths_to_outlet": {
             "min_hops": int(hops_outlet.min()),
@@ -230,4 +257,6 @@ def compute_network_metrics(graph, reaches=None, sample_limit: int = 200000) -> 
             "betweenness_centrality": betweenness_centrality,
             "pagerank_centrality": pagerank_centrality,
         },
+        "scaling": scaling_metrics,
+        "perturbation": perturbation_metrics,
     }

@@ -12,6 +12,9 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 import igraph as ig
+import pandas as pd
+from pyarrow.parquet import read_schema
+from river_networks.graph.builder import build_river_graph
 from river_networks.config import load_rivers, get_river
 from river_networks.graph.metrics import compute_network_metrics
 from river_networks.storage.paths import RiverPaths
@@ -23,10 +26,6 @@ def compute_and_save_river_metrics(river_id: str, force: bool = False) -> dict |
     graph_path = graph_dir / "directed.graphml"
     metrics_path = graph_dir / "network_metrics.json"
 
-    if not graph_path.is_file():
-        print(f"[{river['display_name']}] Skipped: directed.graphml not found at {graph_path}")
-        return None
-
     if not force and metrics_path.is_file():
         print(f"[{river['display_name']}] Already computed: {metrics_path}", flush=True)
         try:
@@ -37,40 +36,26 @@ def compute_and_save_river_metrics(river_id: str, force: bool = False) -> dict |
     print(f"[{river['display_name']}] Loading river graph...", flush=True)
     t0 = time.time()
     extracted_parquet = paths.processed / "extracted_network.parquet"
+    reaches = None
     if extracted_parquet.is_file():
-        import pyarrow.parquet as pq
-        table = pq.read_table(extracted_parquet, columns=["HYRIV_ID", "NEXT_DOWN"])
-        hyriv = table["HYRIV_ID"].to_numpy()
-        next_down = table["NEXT_DOWN"].to_numpy()
-        sources = [f"junction:{h}" for h in hyriv]
-        targets = [f"junction:{n}" if n != 0 else f"outlet:{h}" for h, n in zip(hyriv, next_down)]
-        node_ids = sorted(set(sources) | set(targets))
-        index = {node_id: i for i, node_id in enumerate(node_ids)}
-        g = ig.Graph(n=len(node_ids), directed=True)
-        g.vs["node_id"] = node_ids
-        g.add_edges([(index[s], index[t]) for s, t in zip(sources, targets)])
-
-        in_deg = g.indegree()
-        node_types = []
-        for i, nid in enumerate(node_ids):
-            if nid.startswith("outlet:"):
-                node_types.append("downstream/outlet")
-            elif in_deg[i] == 0:
-                node_types.append("headwater")
-            elif in_deg[i] > 1:
-                node_types.append("confluence/junction")
-            else:
-                node_types.append("intermediate/topology-preserving")
-        g.vs["node_type"] = node_types
-    else:
+        available = set(read_schema(extracted_parquet).names)
+        analysis_columns = ["ORD_STRA", "LENGTH_KM", "UPLAND_SKM", "DIST_UP_KM"]
+        columns = ["HYRIV_ID", "NEXT_DOWN"] + [name for name in analysis_columns if name in available]
+        reaches = pd.read_parquet(extracted_parquet, columns=columns)
+        g, undirected = build_river_graph(reaches[["HYRIV_ID", "NEXT_DOWN"]])
+        del undirected
+    elif graph_path.is_file():
         g = ig.Graph.Read_GraphML(str(graph_path))
+    else:
+        print(f"[{river['display_name']}] No extracted Parquet or directed GraphML.")
+        return None
 
     read_time = time.time() - t0
     print(f"  Loaded graph ({g.vcount():,} nodes, {g.ecount():,} edges) in {read_time:.2f}s", flush=True)
 
     print(f"[{river['display_name']}] Computing network metrics...", flush=True)
     t1 = time.time()
-    metrics = compute_network_metrics(g)
+    metrics = compute_network_metrics(g, reaches=reaches)
     compute_time = time.time() - t1
     print(f"  Calculated metrics in {compute_time:.2f}s", flush=True)
 
@@ -82,7 +67,9 @@ def compute_and_save_river_metrics(river_id: str, force: bool = False) -> dict |
     }
 
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
-    metrics_path.write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
+    temporary_path = metrics_path.with_suffix(".json.tmp")
+    temporary_path.write_text(json.dumps(metrics_payload, indent=2, allow_nan=False), encoding="utf-8")
+    temporary_path.replace(metrics_path)
     print(f"  Saved -> {metrics_path}", flush=True)
     return metrics_payload
 
@@ -95,8 +82,10 @@ def main() -> int:
     rivers = [args.river] if args.river else sorted(load_rivers())
     print(f"Computing network metrics for {len(rivers)} river(s): {', '.join(rivers)}\n")
 
-    for river_id in rivers:
-        compute_and_save_river_metrics(river_id, force=args.force)
+    missing = [river_id for river_id in rivers if compute_and_save_river_metrics(river_id, force=args.force) is None]
+    if missing:
+        print("Metrics unavailable for: " + ", ".join(missing))
+        return 1
 
     print("\nAll network metrics computed successfully.")
     return 0

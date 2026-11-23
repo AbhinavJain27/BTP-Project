@@ -28,5 +28,8 @@ The app will open at the local Streamlit URL printed by the command.
 - Interactive geographic reach view using the real reach geometries. MultiLineString geometries are supported.
 - Pipeline provenance/status panel for acquisition, preprocessing, extraction, validation, and graph metadata.
 - Clear error states for missing/malformed artifacts.
+- Filtered basin CSV and Parquet downloads with a column selector.
+- Cross-basin comparison using saved values. The radar includes axes shared by all displayed basins.
+- Horton and fragmentation charts when the required Phase 2 metrics have been generated.
 
 The map defaults to a bounded number of reaches for browser responsiveness. It does not alter or recompute the stored dataset; it only controls how many real geometries are drawn.

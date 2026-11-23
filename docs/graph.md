@@ -35,7 +35,7 @@ Every constructed graph must pass strict sanity validations:
 
 ## 3. Network Science Metrics
 
-Computed by [`compute_network_metrics()`](file:///d:/BTP-abhinav/river-networks-phase1-complete/src/river_networks/graph/metrics.py) and stored in `network_metrics.json`:
+Computed by [`compute_network_metrics()`](../src/river_networks/graph/metrics.py) and stored in `network_metrics.json`:
 
 1. **Size & Density**:
    - `node_count` ($|V|$): Total topological vertices.
@@ -54,3 +54,18 @@ Computed by [`compute_network_metrics()`](file:///d:/BTP-abhinav/river-networks-
    - **PageRank Centrality**: Models downstream accumulation; nodes with the highest PageRank correspond to major trunk channels draining large tributary networks.
 5. **Clustering Coefficient (Transitivity)**:
    - Global transitivity measuring closed triangles. Dendritic drainage trees have strictly **0 closed triangles** (clustering coefficient = 0.0000).
+
+## 4. Phase 2 metrics
+
+- **Horton ratios** use log-linear fits by Strahler order. Consecutive reaches of the same order
+  form a stream. Lengths are summed along those reaches, and drainage area is read at stream endpoints.
+- **Hack’s exponent** is a log-log fit of positive upstream distance and drainage area, using up to
+  5,000 reproducibly sampled reaches. The saved metrics identify the length field and sample size.
+- **Tokunaga statistics** count lower-order tributaries entering higher-order streams, excluding the
+  equal-order merges that form the receiving stream. The branching ratio is fitted only when at least
+  two order differences have positive observations.
+- **Fragmentation** measures the share of reach length still connected to the original outlets.
+  Targeted cuts use exact directed edge betweenness in a converging drainage forest. The random curve
+  reports the mean and standard deviation across eight trials with a fixed seed.
+- **Path lengths and centrality** include method metadata where applicable. Directed tree betweenness
+  is exact. The landmark undirected average is an estimate when only a subset of nodes is sampled.

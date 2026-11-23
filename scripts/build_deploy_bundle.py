@@ -153,7 +153,12 @@ def main() -> int:
                 shutil.copy2(metrics_src, dest_graph / "network_metrics.json")
                 size += metrics_src.stat().st_size
             directed = graph_dir / "directed.graphml"
-            if directed.is_file():
+            nodes = graph_dir / "nodes.parquet"
+            if nodes.is_file():
+                shutil.copy2(nodes, dest_graph / nodes.name)
+                size += nodes.stat().st_size
+                note += f" | carried over node table ({human(nodes.stat().st_size)})"
+            elif directed.is_file():
                 gm_before = directed.stat().st_size
                 nsize = graphml_to_nodes_parquet(directed, dest_graph / "nodes.parquet")
                 size += nsize

@@ -15,7 +15,7 @@ The preprocessing stage converts raw, multi-gigabyte regional File Geodatabases 
 
 ## 2. Standardization Steps
 
-In [`standardize.py`](file:///d:/BTP-abhinav/river-networks-phase1-complete/src/river_networks/preprocessing/standardize.py):
+In [`standardize.py`](../src/river_networks/preprocessing/standardize.py):
 
 1. **Schema Validation**:
    - Asserts that all 15 required HydroRIVERS fields are present before processing.

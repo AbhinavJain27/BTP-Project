@@ -41,11 +41,39 @@ def save_graph_artifact(directed, undirected, output_directory: Path, metadata: 
     _graphml_ready(directed).write_graphml(str(directed_path))
     _graphml_ready(undirected).write_graphml(str(undirected_path))
     metadata_path.write_text(json.dumps(metadata, indent=2, default=str), encoding="utf-8")
+
+    # Native Phase 2 enhancement: emit compact columnar nodes.parquet
+    import pandas as pd
+    attrs = directed.vs.attributes()
+    rows = []
+    for v in directed.vs:
+        node_id = v["node_id"] if "node_id" in attrs else v.index
+        reach_id = str(node_id).split(":", 1)[-1] if ":" in str(node_id) else str(node_id)
+        rows.append({
+            "node_id": node_id,
+            "reach_id": reach_id,
+            "node_type": v["node_type"] if "node_type" in attrs else "unknown",
+            "in_degree": v["in_degree"] if "in_degree" in attrs else directed.degree(v.index, mode="in"),
+            "out_degree": v["out_degree"] if "out_degree" in attrs else directed.degree(v.index, mode="out"),
+            "degree": v["degree"] if "degree" in attrs else directed.degree(v.index),
+            "x": v["x"] if "x" in attrs else None,
+            "y": v["y"] if "y" in attrs else None,
+        })
+    nodes_df = pd.DataFrame(rows)
+    for col in ("in_degree", "out_degree", "degree"):
+        nodes_df[col] = pd.to_numeric(nodes_df[col], errors="coerce").fillna(0).astype("int16")
+    for col in ("x", "y"):
+        nodes_df[col] = pd.to_numeric(nodes_df[col], errors="coerce").astype("float32")
+    nodes_df["node_type"] = nodes_df["node_type"].astype("category")
+    nodes_path = output_directory / "nodes.parquet"
+    nodes_df.to_parquet(nodes_path, compression="zstd", index=False)
+
     return {
         "directory": str(output_directory),
         "directed": str(directed_path),
         "undirected": str(undirected_path),
         "metadata": str(metadata_path),
+        "nodes": str(nodes_path),
     }
 
 def load_graph_artifact(directory: Path):

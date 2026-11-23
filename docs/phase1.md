@@ -11,11 +11,11 @@ The pipeline currently supports six global and Indian river basins:
 | River | Region | Source Dataset | Selection Identifier (`MAIN_RIV`) | Reaches Extracted |
 |---|---|---|---|---|
 | **Amazon** | South America (`sa`) | HydroRIVERS v1.0 | `60443230` | 744,786 |
-| **Ganga-Brahmaputra-Meghna** | Asia (`as`) | HydroRIVERS v1.0 | `41067217` | 163,484 |
-| **Yangtze** | Asia (`as`) | HydroRIVERS v1.0 | `40613666` | 140,974 |
-| **Nile** | Africa (`af`) | HydroRIVERS v1.0 | `10047863` | 133,798 |
-| **Godavari** | India (Asia `as`) | HydroRIVERS v1.0 | `41275841` | 18,703 |
-| **Krishna** | India (Asia `as`) | HydroRIVERS v1.0 | `41297283` | 16,084 |
+| **Ganga-Brahmaputra-Meghna** | Asia (`as`) | HydroRIVERS v1.0 | `41067217` | 163,483 |
+| **Yangtze** | Asia (`as`) | HydroRIVERS v1.0 | `40613666` | 140,973 |
+| **Nile** | Africa (`af`) | HydroRIVERS v1.0 | `10047863` | 133,797 |
+| **Godavari** | India (Asia `as`) | HydroRIVERS v1.0 | `41275841` | 18,702 |
+| **Krishna** | India (Asia `as`) | HydroRIVERS v1.0 | `41297283` | 16,083 |
 
 ---
 
@@ -36,16 +36,17 @@ Run individual stages:
 river-networks acquire --river godavari
 river-networks preprocess --river godavari
 river-networks extract --river godavari
-river-networks graph --river godavari
-river-networks validate --river godavari
+river-networks build-graph --river godavari
 ```
 
 Or run the full pipeline in one command:
 ```bash
 river-networks pipeline --river godavari
+python scripts/compute_network_metrics.py --river godavari --force
 ```
 
-The pipeline automatically fingerprints input sources and configurations; stages are cached and only re-executed when fingerprints change or `--force` is supplied.
+The pipeline fingerprints input sources and configurations to reuse valid artifacts. It validates the
+graph during the pipeline run. The separate metrics script creates or refreshes the numeric results.
 
 ---
 

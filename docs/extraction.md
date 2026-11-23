@@ -24,7 +24,7 @@ In HydroRIVERS, reach records do not contain string river names. Instead, river 
 
 ## 2. Topological Closure & Validation
 
-In [`extract.py`](file:///d:/BTP-abhinav/river-networks-phase1-complete/src/river_networks/preprocessing/extract.py), before saving the extracted dataset, the code enforces strict topological closure:
+In [`extract.py`](../src/river_networks/preprocessing/extract.py), before saving the extracted dataset, the code enforces strict topological closure:
 
 ```python
 ids = set(selected["HYRIV_ID"].dropna().astype(int))

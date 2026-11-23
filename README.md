@@ -1,4 +1,4 @@
-# River Networks (Phase 1)
+# River Networks
 
 A configuration-driven pipeline and interactive Streamlit dashboard for extracting, analyzing, and exploring large-scale river drainage networks from HydroSHEDS HydroRIVERS v1.0 data.
 
@@ -10,26 +10,27 @@ A configuration-driven pipeline and interactive Streamlit dashboard for extracti
 
 - **Six Global River Basins Fully Processed**:
   - **Amazon** (South America): 744,786 reaches, 2,345-hop directed diameter.
-  - **Ganga-Brahmaputra-Meghna** (Asia): 163,484 reaches, 1,415-hop directed diameter.
-  - **Yangtze** (Asia): 140,974 reaches, 1,738-hop directed diameter.
-  - **Nile** (Africa): 133,798 reaches, 1,940-hop directed diameter.
-  - **Godavari** (India): 18,703 reaches, 449-hop directed diameter.
-  - **Krishna** (India): 16,084 reaches, 396-hop directed diameter.
+  - **Ganga-Brahmaputra-Meghna** (Asia): 163,483 reaches, 1,415-hop directed diameter.
+  - **Yangtze** (Asia): 140,973 reaches, 1,738-hop directed diameter.
+  - **Nile** (Africa): 133,797 reaches, 1,940-hop directed diameter.
+  - **Godavari** (India): 18,702 reaches, 449-hop directed diameter.
+  - **Krishna** (India): 16,083 reaches, 396-hop directed diameter.
 - **Network Science & Graph Metrics**:
   - Topological metrics: node/edge count, graph density, self-loops (strictly 0).
   - Degree distributions: in-degree (confluence capacity), out-degree, total degree.
-  - Diameters & path lengths: directed diameter, undirected diameter (via O(V) 2-sweep BFS), average path length, shortest path hops to outlet.
+  - Diameters and path lengths: directed diameter, undirected diameter, average path length, and hops to outlet. Large-basin undirected average path lengths use landmark sampling.
   - Centrality measures: betweenness centrality (flow bottlenecks), PageRank (tributary accumulation).
   - Component analysis & transitivity: DAG verification, weak/strong components, clustering coefficient (transitivity = 0.0 for dendritic trees).
+  - Phase 2 metrics: Horton, Hack, and Tokunaga scaling plus simulated reach fragmentation. See the [metrics methods](docs/graph.md#4-phase-2-metrics).
 - **Interactive Streamlit Dashboard**:
   - **Overview**: Hydrology & Network summary metric cards with native `(?)` 1–2 line tooltip explanations.
   - **Distributions**: Reach attribute distributions (length, discharge, catchment area, Strahler order, Horton's law) and network metric histograms.
   - **Reach Map**: Multi-order toggleable highlighting in bold, high-contrast colors against dull gray background reaches, with cleared initial state on country boundaries.
   - **Node Explorer**: Topological point explorer (headwaters in vivid sky blue, confluences in orange, outlets in crimson red, intermediates in purple) with balanced quota sampling and legend preservation.
-  - **Data Viewer & Download**: Human-friendly dataset inspection and custom column export (processed basin networks in `.csv` for Excel, and regional hydrography in `.parquet`/`.csv`).
+  - **Data Viewer & Download**: Filter the selected basin by stream order, choose columns, and download CSV or Parquet.
+  - **Cross-Basin Comparison**: Compare shared saved metrics with a table and radar chart.
   - **Provenance / Logs**: Pipeline execution status and metadata audit trail.
-- **Zero-RAM Deployment Architecture**:
-  - Built-in bundler (`scripts/build_deploy_bundle.py`) that converts 1.65 GB of raw GraphML into columnar `nodes.parquet`, shrinking the entire 6-river dataset to **~35 MB zipped** for instant, low-memory deployment on Streamlit Community Cloud.
+- **Compact dashboard bundle**: The bundler packages basin reaches, node tables, metrics, and provenance. The published `v2-data_bundle` ZIP is about 55 MB.
 
 ---
 
@@ -40,8 +41,8 @@ A configuration-driven pipeline and interactive Streamlit dashboard for extracti
 Clone the repository and install the project in a Python environment (Python 3.10+):
 
 ```bash
-git clone https://github.com/<username>/river-networks.git
-cd river-networks
+git clone https://github.com/AbhinavJain27/BTP-Project.git
+cd BTP-Project
 pip install -e .
 ```
 
@@ -55,7 +56,9 @@ To run locally:
 streamlit run dashboard/app.py
 ```
 
-The app will open in your browser. On a local checkout with processed data, it loads directly from `datasets/`.
+The app opens in your browser and reads processed data from `datasets/`. On a fresh checkout, set
+`DATA_BUNDLE_URL` in the environment or in `.streamlit/secrets.toml` to the published bundle URL
+shown below.
 
 ---
 
@@ -71,15 +74,19 @@ river-networks config --river godavari
 river-networks pipeline --river godavari
 
 # Recompute network metrics for all rivers
-python scripts/compute_network_metrics.py
+python scripts/compute_network_metrics.py --force
 ```
 
 ### Pipeline Stages
-1. **Acquisition**: Verifies regional HydroRIVERS File Geodatabases in `datasets/raw/`.
+1. **Acquisition**: Verifies regional HydroRIVERS File Geodatabases in the raw directories defined in `config/paths.yaml`.
 2. **Preprocessing**: Validates schema, repairs linework geometries, normalizes types, and outputs shared regional GeoParquet.
 3. **Extraction**: Filters reaches by verified `MAIN_RIV` identifiers and enforces topological closure (every `NEXT_DOWN` points to an in-network reach or `0`).
 4. **Graph Construction**: Builds directed and undirected `igraph` models, tags topological node roles, and saves GraphML + metadata.
-5. **Validation & Metrics**: Verifies DAG acyclicity, computes diameters, path lengths, centralities, and writes `network_metrics.json`.
+5. **Validation**: Checks topology and writes validation metadata.
+
+The metrics script runs separately and writes `network_metrics.json`. It can recompute topology,
+centrality, scaling, and fragmentation directly from extracted basin Parquet. GraphML-only inputs
+can produce baseline graph metrics.
 
 ---
 
@@ -91,7 +98,7 @@ To deploy on Streamlit Community Cloud without exceeding container memory limits
    ```bash
    python scripts/build_deploy_bundle.py
    ```
-   This generates `deploy_bundle.zip` (~35 MB) containing pruned reach parquets, precomputed `nodes.parquet` tables, and metadata.
+   This generates `deploy_bundle.zip` with pruned reach Parquet, node tables, saved metrics, and provenance.
 
 2. **Publish on GitHub Releases**:
    Create a release in your GitHub repository (e.g. tag `v1.0-data`) and attach `deploy_bundle.zip`.
@@ -99,9 +106,9 @@ To deploy on Streamlit Community Cloud without exceeding container memory limits
 3. **Deploy on Streamlit Cloud**:
    - Repository: your GitHub repo
    - Main file path: `dashboard/app.py`
-   - In **Settings $\to$ Secrets**, add:
+   - In **Settings → Secrets**, set the bundle URL. The published baseline bundle is:
      ```toml
-     DATA_BUNDLE_URL = "https://github.com/<username>/<repo>/releases/download/v1.0-data/deploy_bundle.zip"
+     DATA_BUNDLE_URL = "https://github.com/AbhinavJain27/BTP-Project/releases/download/v2-data_bundle/deploy_bundle.zip"
      ```
    The app will automatically download and unpack the bundle on first run.
 
@@ -125,7 +132,7 @@ To deploy on Streamlit Community Cloud without exceeding container memory limits
 │   ├── phase1.md               # Phase 1 operational overview
 │   └── preprocessing.md        # Standardization & geometry cleaning
 ├── scripts/                    # Utility scripts
-│   ├── build_deploy_bundle.py  # Zero-RAM deploy bundle builder
+│   ├── build_deploy_bundle.py  # Dashboard data bundle builder
 │   ├── compute_network_metrics.py # Precomputes graph metrics
 │   └── preflight_phase1.py     # Pre-run verification checker
 ├── src/river_networks/         # Core Python package
@@ -138,7 +145,7 @@ To deploy on Streamlit Community Cloud without exceeding container memory limits
 ├── tests/                      # Automated test suite
 ├── .gitignore                  # Git exclusion rules
 ├── requirements.txt            # Runtime dependencies
-└── setup.py                    # Package configuration
+└── pyproject.toml              # Package configuration
 ```
 
 ---

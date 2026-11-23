@@ -33,6 +33,9 @@ def build_parser()->argparse.ArgumentParser:
     pipeline_parser=subparsers.add_parser("pipeline",help="run the complete Phase 1 pipeline")
     pipeline_parser.add_argument("--river",required=True,choices=sorted(load_rivers()))
     pipeline_parser.add_argument("--force",action="store_true",help="rebuild all cached pipeline stages")
+    export_parser=subparsers.add_parser("export",help="export river network in CSV, GeoJSON, or Parquet format")
+    export_parser.add_argument("--river",required=True,choices=sorted(load_rivers()))
+    export_parser.add_argument("--format",default="csv",choices=["csv","geojson","parquet","metrics_json"],help="export format")
     return parser
 
 def _processed_output(river_id:str)->Path:
@@ -113,6 +116,15 @@ def main()->int:
             print(f"{stage['stage']}: {stage['status']}")
         print(json.dumps(result,indent=2))
         return 0
+    if args.command=="export":
+        from .storage import export_river_data
+        try:
+            result = export_river_data(args.river, output_format=args.format)
+            print(json.dumps(result, indent=2))
+            return 0
+        except Exception as exc:
+            print(f"Export failed: {exc}")
+            return 1
     if args.command=="help" or args.command is None:
         parser.print_help()
         return 0
