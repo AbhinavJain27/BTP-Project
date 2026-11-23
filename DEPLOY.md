@@ -4,8 +4,8 @@
 
 From the repository root, install the project and its runtime dependencies. Use
 the extracted data under `datasets/`, or start with the published
-[v2-data_bundle release](https://github.com/AbhinavJain27/BTP-Project/releases/tag/v2-data_bundle).
-The published ZIP is about 55 MB and contains the baseline six-basin metrics.
+[v3-data_bundle release](https://github.com/AbhinavJain27/BTP-Project/releases/tag/v3-data_bundle).
+The published ZIP is about 55 MB and contains the updated six-basin metrics.
 
 Run these commands after changing metrics:
 
@@ -29,11 +29,11 @@ and after switching between basins.
 
 Attach the tested `deploy_bundle.zip` to a GitHub release. Deploy the repository
 with `dashboard/app.py` as the main file, and set `DATA_BUNDLE_URL` in the app's
-Streamlit secrets to the direct download URL for that release. The baseline
+Streamlit secrets to the direct download URL for that release. The Phase 2
 configuration uses:
 
 ```toml
-DATA_BUNDLE_URL = "https://github.com/AbhinavJain27/BTP-Project/releases/download/v2-data_bundle/deploy_bundle.zip"
+DATA_BUNDLE_URL = "https://github.com/AbhinavJain27/BTP-Project/releases/download/v3-data_bundle/deploy_bundle.zip"
 ```
 
 The bootstrap downloads the ZIP on first run when local basin files are absent.

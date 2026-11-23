@@ -2,12 +2,12 @@
 
 A configuration-driven pipeline and interactive Streamlit dashboard for extracting, analyzing, and exploring large-scale river drainage networks from HydroSHEDS HydroRIVERS v1.0 data.
 
-[Hosted dashboard](https://river-networks.streamlit.app/) · [Published baseline data bundle](https://github.com/AbhinavJain27/BTP-Project/releases/tag/v2-data_bundle)
+[Hosted dashboard](https://river-networks.streamlit.app/) · [Phase 2 data bundle](https://github.com/AbhinavJain27/BTP-Project/releases/tag/v3-data_bundle) · [Baseline bundle](https://github.com/AbhinavJain27/BTP-Project/releases/tag/v2-data_bundle)
 
 Phase 1 established the six-basin extraction and graph benchmark. Phase 2 adds exact directed-tree
 metrics, scaling and fragmentation analysis, cross-basin browsing and exports, RiverBot Q&A, and
 a separate river-width prediction benchmark. This README describes the current source checkout.
-The hosted dashboard and published baseline bundle can lag local changes.
+The hosted dashboard uses the bundle URL configured in its Streamlit settings.
 
 ---
 
@@ -36,7 +36,7 @@ The hosted dashboard and published baseline bundle can lag local changes.
   - **Cross-Basin Comparison**: Compare saved metrics in a table and on a radar chart. The radar includes only metrics available for every displayed basin.
   - **RiverBot Q&A**: Ask for a definition, look up a basin value, choose a suggested question, or clear the conversation.
   - **Provenance / Logs**: Pipeline execution status and metadata audit trail.
-- **Compact dashboard bundle**: The bundler packages basin reaches, node tables, metrics, and provenance. The published `v2-data_bundle` ZIP is about 55 MB.
+- **Compact dashboard bundle**: The published `v3-data_bundle` ZIP is about 55 MB and includes updated metrics for all six basins.
 
 ---
 
@@ -55,11 +55,11 @@ pip install -e .
 ### 2. Launch the Dashboard
 
 The app reads processed data from `datasets/`. A fresh checkout can download the published
-baseline bundle. Set `DATA_BUNDLE_URL` in the environment or in `.streamlit/secrets.toml`
+Phase 2 bundle. Set `DATA_BUNDLE_URL` in the environment or in `.streamlit/secrets.toml`
 before starting the app:
 
 ```toml
-DATA_BUNDLE_URL = "https://github.com/AbhinavJain27/BTP-Project/releases/download/v2-data_bundle/deploy_bundle.zip"
+DATA_BUNDLE_URL = "https://github.com/AbhinavJain27/BTP-Project/releases/download/v3-data_bundle/deploy_bundle.zip"
 ```
 
 ```bash
@@ -109,8 +109,8 @@ The metrics script runs separately and writes `network_metrics.json`. It can rec
 centrality, scaling, and fragmentation directly from extracted basin Parquet. GraphML-only inputs
 can produce baseline graph metrics.
 
-Recompute the metrics before building a bundle with the Phase 2 results. The published baseline
-bundle contains the six basin extracts and baseline metrics. The export CLI also supports CSV,
+Recompute the metrics before building a new bundle after changing the analysis. The research notebook
+uses the published baseline bundle to reproduce the original width experiment. The export CLI also supports CSV,
 GeoJSON, and Parquet.
 
 ## River-width prediction benchmark
@@ -158,9 +158,9 @@ See the [deployment guide](DEPLOY.md) for clean-bundle and dashboard checks.
 3. **Deploy on Streamlit Cloud**:
    - Repository: your GitHub repo
    - Main file path: `dashboard/app.py`
-   - In **Settings → Secrets**, set the bundle URL. The published baseline bundle is:
+   - In **Settings → Secrets**, set the bundle URL:
      ```toml
-     DATA_BUNDLE_URL = "https://github.com/AbhinavJain27/BTP-Project/releases/download/v2-data_bundle/deploy_bundle.zip"
+     DATA_BUNDLE_URL = "https://github.com/AbhinavJain27/BTP-Project/releases/download/v3-data_bundle/deploy_bundle.zip"
      ```
    The app will automatically download and unpack the bundle on first run.
 
