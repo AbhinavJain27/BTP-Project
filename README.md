@@ -42,29 +42,70 @@ The hosted dashboard uses the bundle URL configured in its Streamlit settings.
 
 ## Quickstart
 
-### 1. Installation
+### 1. Clone and install locally
 
-Clone the repository and install the project in a Python environment (Python 3.10+):
+Install Git and Python 3.10 or later, then clone the repository. Run the remaining commands
+from the repository root.
 
-```bash
+```sh
 git clone https://github.com/AbhinavJain27/BTP-Project.git
 cd BTP-Project
-pip install -e .
 ```
 
-### 2. Launch the Dashboard
+**Windows PowerShell**
 
-The app reads processed data from `datasets/`. A fresh checkout can download the published
-Phase 2 bundle. Set `DATA_BUNDLE_URL` in the environment or in `.streamlit/secrets.toml`
-before starting the app:
+```powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -e .
+```
+
+These commands use the virtual environment's interpreter directly, so PowerShell activation
+is optional. If `py` is unavailable, use `python` to create the environment.
+
+**macOS or Linux**
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt -e .
+```
+
+### 2. Load the data bundle and launch the dashboard
+
+Choose either automatic download or manual extraction. The Phase 2 bundle contains processed
+data for six basins. The dashboard can use these files immediately without running the pipeline.
+
+**Automatic download.** Create `.streamlit/secrets.toml` in the repository root and add:
 
 ```toml
 DATA_BUNDLE_URL = "https://github.com/AbhinavJain27/BTP-Project/releases/download/v3-data_bundle/deploy_bundle.zip"
 ```
 
-```bash
-streamlit run dashboard/app.py
+The dashboard downloads this ZIP and extracts it into `datasets/` on first launch when
+no local basin data is detected. You can also set `DATA_BUNDLE_URL` as an environment variable.
+
+**Manual extraction.** Download `deploy_bundle.zip` from the [Phase 2 release](https://github.com/AbhinavJain27/BTP-Project/releases/tag/v3-data_bundle)
+and extract its contents directly into `datasets/`. Check that the result includes
+`datasets/india/ganga/processed/extracted_network.parquet` and
+`datasets/global/amazon/processed/extracted_network.parquet`. If your extractor creates a
+wrapper folder named `deploy_bundle`, move its contents up into `datasets/`.
+
+**Launch** from the repository root:
+
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\python.exe -m streamlit run dashboard/app.py
 ```
+
+```sh
+# macOS or Linux, with the virtual environment active
+python -m streamlit run dashboard/app.py
+```
+
+Open the local URL printed by Streamlit, usually `http://localhost:8501`, then select
+a river in the sidebar. To test a newer release with automatic download, use a fresh checkout
+or stop Streamlit and temporarily move the existing `datasets/` directory aside. Changing the
+URL alone leaves an existing `.bundle_ready` marker or extracted basin Parquet in use.
 
 ### 3. Use RiverBot
 
@@ -112,6 +153,100 @@ can produce baseline graph metrics.
 Recompute the metrics before building a new bundle after changing the analysis. The research notebook
 uses the published baseline bundle to reproduce the original width experiment. The export CLI also supports CSV,
 GeoJSON, and Parquet.
+
+## Add a river or basin
+
+### 1. Find the HydroRIVERS source and outlet ID
+
+Open the [regional HydroRIVERS layer](https://www.hydrosheds.org/products/hydrorivers)
+in a GIS such as QGIS. Locate the intended river and verify its `MAIN_RIV` value in the
+attribute table. `MAIN_RIV` identifies the terminal reach of the connected system.
+Confirm that the terminal reach matches the basin you want. A tributary can share its
+parent basin's `MAIN_RIV` value, so this selection can include the entire parent basin.
+
+### 2. Register the river in `config/rivers.yaml`
+
+Add an entry under the existing `rivers:` mapping. Replace `example_river`, the display name,
+and `12345678` with your own ID, name, and verified `MAIN_RIV`. Choose `india` or `global`
+for the artifact directory, and select the continental source separately.
+
+```yaml
+  example_river:
+    river_id: example_river
+    display_name: Example River
+    region: global
+    source:
+      dataset: HydroRIVERS
+      provider: HydroSHEDS
+      version: v1.0
+      regional_source: asia
+      format: filegdb
+    selection:
+      method: main_riv
+      main_riv_ids: [12345678]
+      hyriv_ids: []
+      hybas_ids: []
+    artifact_id: example_river
+    output_location: global/example_river
+```
+
+Keep `output_location` equal to `<region>/<artifact_id>`. The `regional_source` value must
+match a key under `paths.regional_sources` in [`config/paths.yaml`](config/paths.yaml).
+For an unlisted continent, add a source there using an existing entry as a template.
+Set the official ZIP URL, the expected `.gdb` directory and layer names, and the raw and
+processed paths. The dashboard reads `config/rivers.yaml` to populate its river selector.
+
+### 3. Prepare the source, build the graph, and compute metrics
+
+Run `river-networks config --river example_river` to print the resolved paths and source URL.
+Download and unpack the regional archive so the `.gdb` directory sits at the reported
+`paths.regional_source` location. For the Asia example, that is
+`datasets/india/raw/HydroRIVERS_v10_as.gdb`, even though the basin artifacts go under `global/`.
+The `acquire` command checks the local geodatabase and layer.
+
+```sh
+river-networks acquire --river example_river
+river-networks pipeline --river example_river
+python scripts/compute_network_metrics.py --river example_river --force
+```
+
+On Windows without activation, use `.\.venv\Scripts\river-networks.exe` in place of
+`river-networks` and `.\.venv\Scripts\python.exe` in place of `python`.
+`pipeline` standardizes the regional layer to GeoParquet, extracts reaches matching the
+configured selection, checks downstream closure, and builds and validates the graph.
+The metrics command then computes topology, centrality, scaling, and fragmentation.
+
+### 4. Check the generated Parquet and JSON files
+
+Each basin gets its own directory under `datasets/<region>/<artifact_id>/`.
+
+| Relative path | What it contains |
+| --- | --- |
+| `processed/extracted_network.parquet` | GeoParquet with one row per reach and its line geometry. `HYRIV_ID` identifies the reach, `MAIN_RIV` identifies the basin, and each `NEXT_DOWN` is `0` or points to another reach in the same file. Keep `ORD_STRA`, `LENGTH_KM`, `UPLAND_SKM`, and `DIST_UP_KM` for the scaling and fragmentation calculations. |
+| `graphs/river_graph/nodes.parquet` | Node attributes generated from the extracted reach graph for the Node Explorer. The pipeline also writes directed and undirected GraphML. |
+| `graphs/river_graph/network_metrics.json` | Generated metrics payload with `river_id`, `river_name`, `computed_at`, and the `metrics` object. The script takes the river ID and name from the configuration. |
+| `graphs/river_graph/metadata.json` and `metadata/*.json` | Graph metadata, validation, and provenance from the pipeline stages. |
+
+To add new reach records, update the source layer and rerun the pipeline with `--force`,
+then recompute the metrics. This regenerates the basin GeoParquet, the node table, and JSON
+from the same source. The river registry is YAML. `network_metrics.json` and
+`BUNDLE_MANIFEST.json` are generated outputs and require no schema edits to register a river.
+
+### 5. Verify and package the new basin
+
+Restart Streamlit. Select the new river and check the Overview, Reach Map, Node Explorer,
+and saved metrics. If the selector shows **(not extracted yet)**, compare the actual
+Parquet location with the paths printed by `river-networks config`.
+
+```sh
+python scripts/build_deploy_bundle.py
+```
+
+The builder packages configured rivers with extracted Parquet present in `datasets/`.
+Keep the existing basins' artifacts available when building a bundle intended to contain them.
+Check the build summary and the generated `BUNDLE_MANIFEST.json` for the new river, then
+test the ZIP in a clean checkout with the updated `config/rivers.yaml`. If deploying, publish
+the ZIP and update `DATA_BUNDLE_URL` as described in [Streamlit Cloud Deployment](#streamlit-cloud-deployment).
 
 ## River-width prediction benchmark
 
